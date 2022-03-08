@@ -6,16 +6,20 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "contacts")
 data class Contact(
+    @ColumnInfo(name = "contact_first_name")
+    var firstName: String,
+    @ColumnInfo(name = "contact_last_name")
+    var lastName: String,
+    @ColumnInfo(name = "contact_email")
+    var email: String,
+    @ColumnInfo(name = "contact_phone")
+    var phone: String?
+) {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "contact_id")
-    val id: Int,
-    @ColumnInfo(name = "contact_first_name")
-    val firstName: String,
-    @ColumnInfo(name = "contact_last_name")
-    val lastName: String,
-    @ColumnInfo(name = "contact_email")
-    val email: String,
-    @ColumnInfo(name = "contact_phone")
-    val phone: String
-)
+    var id: Int = 0
+        set(value) {
+            field = value
+        }
+}

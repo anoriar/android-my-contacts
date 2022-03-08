@@ -7,7 +7,11 @@ import androidx.room.*
 interface ContactDao {
 
     @Query("SELECT * FROM contacts")
-    fun getAll(): List<Contact>
+    fun getAll(): MutableList<Contact>
+
+
+    @Query("SELECT * FROM contacts where contact_id == :contactId")
+    fun getById(contactId: Int): Contact
 
     @Insert
     fun insert(contact: Contact)

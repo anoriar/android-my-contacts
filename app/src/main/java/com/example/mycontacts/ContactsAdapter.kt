@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ContactsAdapter(private val contacts: List<Contact>) :
+class ContactsAdapter(private val contacts: List<Contact>, private val mainActivity: MainActivity) :
     RecyclerView.Adapter<ContactsAdapter.ViewHolder>() {
     /**
      * Provide a reference to the type of views that you are using
@@ -30,13 +30,20 @@ class ContactsAdapter(private val contacts: List<Contact>) :
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         val contact = contacts[position]
 
-//        viewHolder.itemView.setOnClickListener(
-//            object : View.OnClickListener {
-//                override fun onClick(p0: View?) {
-//                    TODO("Not yet implemented")
-//                }
-//            }
-//        )
+        viewHolder.itemView.setOnClickListener(
+            object : View.OnClickListener {
+                override fun onClick(p0: View?) {
+                    mainActivity.showUpdateAlertDialog(position)
+                }
+            }
+        )
+
+        viewHolder.itemView.setOnTouchListener(object :
+            OnSwipeTouchListener(viewHolder.itemView.context) {
+            override fun onSwipeLeft() {
+                mainActivity.showDeleteAlertDialog(position)
+            }
+        })
 
         viewHolder.firstNameTextView.text = contact.firstName
         viewHolder.lastNameTextView.text = contact.lastName
