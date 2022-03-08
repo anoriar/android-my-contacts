@@ -11,18 +11,25 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.security.InvalidParameterException
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var contactsDatabase: ContactsDatabase
     private lateinit var recyclerView: RecyclerView
     private lateinit var contactsAdapter: ContactsAdapter
-    private lateinit var contacts: MutableList<Contact>
+    private var contacts: MutableList<Contact> = mutableListOf<Contact>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,10 +37,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initDb()
+
+//        TODO: сделать асинхронно через корутины
         contacts = contactsDatabase.contactDao().getAll()
         initRecyclerView()
         initAddBtn()
+        initSwipeHelper()
     }
+
 
     private fun initRecyclerView() {
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
@@ -54,6 +65,27 @@ class MainActivity : AppCompatActivity() {
         floatingActionButton.setOnClickListener({
             showAddAlertDialog()
         })
+    }
+
+    private fun initSwipeHelper() {
+
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.LEFT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val contact: Contact = contacts.get(viewHolder.adapterPosition)
+                deleteContact(contact)
+            }
+        }).attachToRecyclerView(recyclerView)
     }
 
     fun showAddAlertDialog() {
@@ -130,17 +162,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showDeleteAlertDialog(position: Int) {
-        val view = getAddUpdateAlertDialogView()
         val builder = AlertDialog.Builder(this)
-        builder.setView(view)
-        val title = view.findViewById<TextView>(R.id.newContactTitle)
-        title.text = "Delete"
-
+        builder.setTitle("Are you sure to delete item?")
 
         builder.setPositiveButton("Confirm", object : DialogInterface.OnClickListener {
             override fun onClick(p0: DialogInterface?, p1: Int) {
                 try {
-                    deleteContact(position)
+//                    deleteContact(position)
                 } catch (exception: InvalidParameterException) {
                     Toast.makeText(this@MainActivity, exception.message, Toast.LENGTH_SHORT).show()
                     return
@@ -201,19 +229,16 @@ class MainActivity : AppCompatActivity() {
         contact.email = email
         contact.phone = phone
 
+
         contactsDatabase.contactDao().update(contact)
         contacts[position] = contact
         contactsAdapter.notifyDataSetChanged()
+
     }
 
-    private fun deleteContact(position: Int) {
-        val contact: Contact = contacts.get(position)
+    private fun deleteContact(contact: Contact) {
         contactsDatabase.contactDao().delete(contact)
-
-        contacts.removeAt(position)
-
+        contacts.remove(contact)
         contactsAdapter.notifyDataSetChanged()
     }
-
-
 }

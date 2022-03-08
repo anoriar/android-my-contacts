@@ -38,18 +38,12 @@ class ContactsAdapter(private val contacts: List<Contact>, private val mainActiv
             }
         )
 
-        viewHolder.itemView.setOnTouchListener(object :
-            OnSwipeTouchListener(viewHolder.itemView.context) {
-            override fun onSwipeLeft() {
-                mainActivity.showDeleteAlertDialog(position)
-            }
-        })
-
         viewHolder.firstNameTextView.text = contact.firstName
         viewHolder.lastNameTextView.text = contact.lastName
         viewHolder.emailTextView.text = contact.email
         viewHolder.phoneTextView.text = contact.phone
     }
+
 
     override fun getItemCount() = contacts.size
 }
