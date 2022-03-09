@@ -17,10 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.security.InvalidParameterException
 
 
@@ -37,10 +34,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initDb()
-
-//        TODO: сделать асинхронно через корутины
-        contacts = contactsDatabase.contactDao().getAll()
         initRecyclerView()
+        CoroutineScope(Dispatchers.IO).launch {
+            contacts.addAll(contactsDatabase.contactDao().getAll())
+            contactsAdapter.notifyDataSetChanged()
+        }
+
         initAddBtn()
         initSwipeHelper()
     }
@@ -57,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         contactsDatabase = Room.databaseBuilder(
             applicationContext,
             ContactsDatabase::class.java, "contacts-database"
-        ).fallbackToDestructiveMigration().allowMainThreadQueries().build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     private fun initAddBtn() {
@@ -161,28 +160,6 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
-    fun showDeleteAlertDialog(position: Int) {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Are you sure to delete item?")
-
-        builder.setPositiveButton("Confirm", object : DialogInterface.OnClickListener {
-            override fun onClick(p0: DialogInterface?, p1: Int) {
-                try {
-//                    deleteContact(position)
-                } catch (exception: InvalidParameterException) {
-                    Toast.makeText(this@MainActivity, exception.message, Toast.LENGTH_SHORT).show()
-                    return
-                }
-            }
-        }).setNegativeButton("Cancel", object : DialogInterface.OnClickListener {
-            override fun onClick(p0: DialogInterface?, p1: Int) {
-                p0?.dismiss()
-            }
-        })
-
-        builder.show()
-    }
-
     private fun validateAlertDialogData(
         firstName: String,
         lastName: String,
@@ -208,11 +185,15 @@ class MainActivity : AppCompatActivity() {
         email: String,
         phone: String? = null
     ) {
-        val contact = Contact(firstName, lastName, email, phone)
-        contactsDatabase.contactDao().insert(contact)
+        CoroutineScope(Dispatchers.IO).launch {
+            val contact = Contact(firstName, lastName, email, phone)
+            contactsDatabase.contactDao().insert(contact)
 
-        contacts.add(0, contact)
-        contactsAdapter.notifyDataSetChanged()
+            contacts.add(0, contact)
+            withContext(Dispatchers.Main) {
+                contactsAdapter.notifyDataSetChanged()
+            }
+        }
     }
 
     private fun updateContact(
@@ -222,23 +203,30 @@ class MainActivity : AppCompatActivity() {
         email: String,
         phone: String? = null
     ) {
-        val contact: Contact = contacts.get(position)
+        CoroutineScope(Dispatchers.IO).launch {
+            val contact: Contact = contacts.get(position)
 
-        contact.firstName = firstName
-        contact.lastName = lastName
-        contact.email = email
-        contact.phone = phone
+            contact.firstName = firstName
+            contact.lastName = lastName
+            contact.email = email
+            contact.phone = phone
 
 
-        contactsDatabase.contactDao().update(contact)
-        contacts[position] = contact
-        contactsAdapter.notifyDataSetChanged()
-
+            contactsDatabase.contactDao().update(contact)
+            contacts[position] = contact
+            withContext(Dispatchers.Main) {
+                contactsAdapter.notifyDataSetChanged()
+            }
+        }
     }
 
     private fun deleteContact(contact: Contact) {
-        contactsDatabase.contactDao().delete(contact)
-        contacts.remove(contact)
-        contactsAdapter.notifyDataSetChanged()
+        CoroutineScope(Dispatchers.IO).launch {
+            contactsDatabase.contactDao().delete(contact)
+            contacts.remove(contact)
+            withContext(Dispatchers.Main) {
+                contactsAdapter.notifyDataSetChanged()
+            }
+        }
     }
 }
