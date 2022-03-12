@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mycontacts.databinding.ContactListItemBinding
 
 class ContactsAdapter(private val contacts: List<Contact>, private val mainActivity: MainActivity) :
     RecyclerView.Adapter<ContactsAdapter.ViewHolder>() {
@@ -13,37 +14,28 @@ class ContactsAdapter(private val contacts: List<Contact>, private val mainActiv
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder).
      */
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val firstNameTextView: TextView = view.findViewById(R.id.firstNameTextView)
-        val lastNameTextView: TextView = view.findViewById(R.id.lastNameTextView)
-        val emailTextView: TextView = view.findViewById(R.id.emailTextView)
-        val phoneTextView: TextView = view.findViewById(R.id.phoneTextView)
-    }
+    inner class ViewHolder(val contactListItemBinding: ContactListItemBinding) :
+        RecyclerView.ViewHolder(contactListItemBinding.root)
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(viewGroup.context)
-            .inflate(R.layout.contact_list_item, viewGroup, false)
+        val contactListItemBinding =
+            ContactListItemBinding.inflate(LayoutInflater.from(viewGroup.context), viewGroup, false)
 
-        return ViewHolder(view)
+        return ViewHolder(contactListItemBinding)
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         val contact = contacts[position]
 
-        viewHolder.itemView.setOnClickListener(
-            object : View.OnClickListener {
-                override fun onClick(p0: View?) {
-                    mainActivity.showUpdateAlertDialog(position)
-                }
-            }
-        )
-
-        viewHolder.firstNameTextView.text = contact.firstName
-        viewHolder.lastNameTextView.text = contact.lastName
-        viewHolder.emailTextView.text = contact.email
-        viewHolder.phoneTextView.text = contact.phone
+        viewHolder.contactListItemBinding.contact = contact
+        viewHolder.contactListItemBinding.contactItemHandler = ContactItemHandler(position)
     }
 
+    inner class ContactItemHandler(private val position: Int) {
+        fun onItemClicked() {
+            mainActivity.showUpdateAlertDialog(position)
+        }
+    }
 
     override fun getItemCount() = contacts.size
 }

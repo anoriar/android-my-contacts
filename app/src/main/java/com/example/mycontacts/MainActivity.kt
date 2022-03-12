@@ -2,6 +2,7 @@ package com.example.mycontacts
 
 import Data.ContactsDatabase
 import Model.Contact
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.TextUtils
@@ -11,11 +12,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.example.mycontacts.databinding.ActivityMainBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.*
 import java.security.InvalidParameterException
@@ -27,11 +30,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var contactsAdapter: ContactsAdapter
     private var contacts: MutableList<Contact> = mutableListOf<Contact>()
+    private lateinit var activityMainBinding: ActivityMainBinding
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        activityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        activityMainBinding.mainButtonHandler = MainActivityButtonHandler()
 
         initDb()
         initRecyclerView()
@@ -40,7 +47,6 @@ class MainActivity : AppCompatActivity() {
             contactsAdapter.notifyDataSetChanged()
         }
 
-        initAddBtn()
         initSwipeHelper()
     }
 
@@ -59,11 +65,11 @@ class MainActivity : AppCompatActivity() {
         ).fallbackToDestructiveMigration().build()
     }
 
-    private fun initAddBtn() {
-        val floatingActionButton = findViewById<FloatingActionButton>(R.id.floatingActionButton)
-        floatingActionButton.setOnClickListener({
+
+    inner class MainActivityButtonHandler() {
+        fun onAddBtnClicked(view: View) {
             showAddAlertDialog()
-        })
+        }
     }
 
     private fun initSwipeHelper() {
@@ -229,4 +235,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+
 }
